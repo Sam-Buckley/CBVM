@@ -1,6 +1,7 @@
+use crate::bytecode::data::ByteData;
 
 #[repr(u8)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Operations {
     NOP = 0x00,
     //Arithmetic
@@ -45,6 +46,15 @@ pub enum Operations {
     CALL = 0x66,
 }
 
+impl ByteData for Operations {
+    fn get(&self) -> u8 {
+        self.clone() as u8
+    }
+    fn set(&mut self, data: u8) {
+        *self = unsafe { core::mem::transmute(data) };
+    }
+}
+
 pub enum MathOperationSides {
     ConstConst = 0,
     ConstReg = 1,
@@ -57,7 +67,8 @@ pub enum MathOpTypes {
     Float = 2,
 }
 pub enum ArgType {
-    Typed, Untyped, Dest, Func
+    Typed, Untyped, Dest, Func,
+    OptionalTyped, OptionalUntyped, OptionalDest, OptionalFunc,
 }
 use ArgType::*;
 
@@ -79,12 +90,16 @@ pub const CONTROL_FLOW_OP_ARGS: [ArgType; 2] = [
 pub const LOAD_OP_ARGS: [ArgType; 2] = [
     Dest, Typed //Reg, size
 ];
-pub const STORE_OP_ARGS: [ArgType; 2] = [
-    Typed, Typed //Data, size
+pub const STORE_OP_ARGS: [ArgType; 3] = [
+    Dest, Typed, Typed //Data, size
 ];
 
-pub const IO_OP_ARGS: [ArgType; 3] = [
+pub const IO_OUT_OP_ARGS: [ArgType; 3] = [
     Typed, Typed, Typed //Data, Size, Buffer
+];
+
+pub const IO_IN_OP_ARGS: [ArgType; 3] = [
+    Typed, Typed, OptionalTyped //Address, Buffer, Size if not specified will run until oob
 ];
 
 pub const REG_OP_ARGS: [ArgType; 2] = [
@@ -93,4 +108,8 @@ pub const REG_OP_ARGS: [ArgType; 2] = [
 
 pub const CALL_OP_ARGS: [ArgType; 1] = [
     Func //Func
+];
+
+pub const PUSH_OP_ARGS: [ArgType; 1] = [
+    Typed //Value
 ];
