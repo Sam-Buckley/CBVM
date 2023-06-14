@@ -1,9 +1,11 @@
+#![allow(dead_code, non_snake_case, unused_imports, unused_macros, unused_variables, unused_mut, unused_parens, unused_assignments, unused_braces, unused_import_braces)]
 extern crate alloc;
+
 use alloc::vec::Vec;
 use crate::bytecode::{
     ops::ArgType::*,
     ops::Operations::*,
-    types::Types,
+    types::Types::{self, *},
     data::ByteData
 };
 
@@ -14,11 +16,53 @@ pub struct ByteStream {
 }
 
 impl ByteStream {
+    #[allow(dead_code)]
     pub fn new() -> ByteStream {
         ByteStream {
             pos: 0,
             bytes: Vec::new()
         }
+    }
+    pub fn emit(&mut self, byte: Byte) -> Self {
+        self.bytes.push(byte);
+        self.clone()
+    }
+    pub fn emitstream(&mut self, stream: ByteStream) -> Self {
+        for byte in stream.bytes {
+            self.bytes.push(byte);
+        }
+        self.clone()
+    }
+
+    pub fn stringify(&self) -> String {
+        let mut string = String::new();
+        //iterate over bytes, add type as u8 then data
+        for byte in &self.bytes {
+            println!("{:?}", byte);
+            //add as hex
+            string.push_str(&(format!("{:02x}", byte.tp as u8)).trim());
+            string.push(' ');
+            //add as hex
+            let data = byte.clone().data.clone();
+            //filter any null bytes
+            string.push_str(&(match byte.tp {
+                //format as hex, numbers should be 2 digits+ if not add a 0
+                //if the number is larger than 2 digits, remove any whitespace
+                TypeU8 => format!("{:02x}", *data),
+                TypeU64 => format!("{:016x}", *data),
+                TypeI8 => format!("{:02x}", *data),
+                TypeI64 => format!("{:016x}", *data),
+                TypeF32 => format!("{:08x}", *data),
+                TypeF64 => format!("{:016x}", *data),
+                TypeU128 => format!("{:032x}", *data),
+                TypeI128 => format!("{:032x}", *data),
+                TypeAddr => format!("{:016x}", *data),
+                TypeReg => format!("{:016x}", *data),
+                TypeFunc => format!("{:016x}", *data),
+                TypeOp => "".to_string()
+            } + " "))
+        }
+        string
     }
 }
 
@@ -54,7 +98,7 @@ macro_rules! constant {
 
 //macro to take a tuple and direct to the correct macro
 #[macro_export]
-macro_rules! handle {
+macro_rules! byte {
     //either tuple of 2 (typed) or 1 (constant)
     (($tp:ident, $val:expr)) => {
         typed!($tp, $val)
@@ -66,16 +110,37 @@ macro_rules! handle {
 //macro to take a stream of tuples, and return a stream of Bytes
 #[macro_export]
 macro_rules! stream {
-    //rule should be a list of tuples
-    ($(($($tp:ident, $val:expr),+)),+) => {
+    //write the rule so the tuple can be either 1 or 2
+    ($(($tp:ident, $val:expr)),*) => {
         {
             let mut stream = ByteStream::new();
             $(
-                $(
-                    stream.bytes.push(handle!(($tp, $val)));
-                )+
-            )+
+                stream.bytes.push(byte!(($tp, $val)));
+            )*
             stream
         }
     };
+}
+#[macro_export]
+macro_rules! func {
+    ($name:expr) => {
+        Byte {
+            data: Box::new(stringtohex($name.to_string())),
+            pos: 0,
+            tp: Types::TypeFunc
+        }
+    };
+}
+pub fn stringtohex(string: String) -> u64 {
+    let mut hex = String::new();
+    for c in string.chars() {
+        hex.push_str(&(format!("{:02x}", c as u8)).trim());
+    }
+    u64::from_str_radix(&hex, 16).unwrap()
+}
+
+impl Byte {
+    fn stringify(&self) -> String {
+        format!("{:02x}", *(self.data))
+    }
 }

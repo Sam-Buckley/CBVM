@@ -1,3 +1,4 @@
+#![allow(dead_code, unused_imports, unused_macros, unused_variables, unused_mut, unused_parens, unused_assignments, unused_braces, unused_import_braces)]
 mod builder;
 mod bytecode;
 use bytecode::{
@@ -10,12 +11,19 @@ mod engine;
 use builder::{
     bytes::*,
 };
+use engine::memory::Heap;
 
 fn main() {
-    //use the builder macro to create a ByteStream
-    println!("{:#?}", stream!{
-        (TypeU64, 1),
-        (TypeU64, 2),
-        (TypeReg, 12)
-    })
+    let mut bstream: ByteStream = ByteStream::new()
+        .emit(func!("dave"))
+        .emit(byte!((TypeOp, 0x19)))
+        .emitstream(stream!{
+            (TypeU8, 0x01),
+            (TypeU64, 0xabc),
+            (TypeAddr, 0x13)
+        });
+    std::fs::write("bytecode.txt", bstream.stringify()).expect("Unable to write file");
 }
+
+//create a macro to take a string and turn it into a ByteStream
+//macro to take a string and return a ByteStream

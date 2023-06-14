@@ -1,5 +1,6 @@
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
+#[allow(dead_code)]
 pub enum Types {
     TypeU8 = 0x00,
     TypeU64 = 0x01,
@@ -13,4 +14,5 @@ pub enum Types {
     TypeAddr = 0x08,
     TypeReg = 0x09,
     TypeFunc = 0x0A,
+    TypeOp = 0x0B
 }

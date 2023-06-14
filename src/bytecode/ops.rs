@@ -1,3 +1,4 @@
+#![allow(dead_code, unused_imports, unused_macros, unused_variables, unused_mut, unused_parens, unused_assignments, unused_braces, unused_import_braces)]
 use crate::bytecode::data::ByteData;
 
 #[repr(u8)]
@@ -72,8 +73,8 @@ pub enum ArgType {
 }
 use ArgType::*;
 
-pub const MATH_OP_ARGS: [ArgType; 2] = [
-    Dest, Typed
+pub const MATH_OP_ARGS: [ArgType; 3] = [
+    Dest, Typed, Typed
 ];
 
 pub const BITWISE_OP_ARGS: [ArgType; 2] = [
