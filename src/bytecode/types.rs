@@ -14,5 +14,8 @@ pub enum Types {
     TypeAddr = 0x08,
     TypeReg = 0x09,
     TypeFunc = 0x0A,
-    TypeOp = 0x0B
+    TypeOp = 0x0B,
+    DerefStackReg = 0x0C,
+    DerefHeapReg = 0x0D,
+    NoType
 }

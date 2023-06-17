@@ -59,7 +59,10 @@ impl ByteStream {
                 TypeAddr => format!("{:016x}", *data),
                 TypeReg => format!("{:016x}", *data),
                 TypeFunc => format!("{:016x}", *data),
-                TypeOp => "".to_string()
+                DerefStackReg => format!("{:016x}", *data),
+                DerefHeapReg => format!("{:016x}", *data),
+                TypeOp => "".to_string(),
+                NoType => "".to_string()
             } + " "))
         }
         string
