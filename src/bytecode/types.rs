@@ -19,3 +19,24 @@ pub enum Types {
     DerefHeapReg = 0x0D,
     NoType
 }
+impl From<u8> for Types {
+    fn from(byte: u8) -> Self {
+        match byte {
+            0x00 => Types::TypeU8,
+            0x01 => Types::TypeU64,
+            0x02 => Types::TypeI8,
+            0x03 => Types::TypeI64,
+            0x04 => Types::TypeF32,
+            0x05 => Types::TypeF64,
+            0x06 => Types::TypeU128,
+            0x07 => Types::TypeI128,
+            0x08 => Types::TypeAddr,
+            0x09 => Types::TypeReg,
+            0x0A => Types::TypeFunc,
+            0x0B => Types::TypeOp,
+            0x0C => Types::DerefStack,
+            0x0D => Types::DerefHeapReg,
+            _ => Types::NoType
+        }
+    }
+}

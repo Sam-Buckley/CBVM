@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_imports, unused_macros, unused_variables, unused_mut, unused_parens, unused_assignments, unused_braces, unused_import_braces)]
 use crate::bytecode::data::ByteData;
-
+use crate::builder::bytes::{Byte, ByteStream};
 #[repr(u8)]
 #[derive(Debug, Clone, Copy)]
 pub enum Operations {
@@ -34,9 +34,13 @@ pub enum Operations {
     //Memory
     LOAD = 0x17,
     STORE = 0x18,
+    ALLOC = 0x1C,
+    FREE = 0x1D,
+    REALLOC = 0x1E,
     //IO
     WRITE = 0x19,
     READ = 0x1A,
+    FLUSH = 0x1F,
 
     //registers
     MOV = 0x1B,
@@ -45,6 +49,12 @@ pub enum Operations {
     FUNC = 0x64,
     RET = 0x65,
     CALL = 0x66,
+}
+
+impl From<Byte> for Operations {
+    fn from(byte: Byte) -> Self {
+        unsafe { core::mem::transmute((*byte.data) as u8) }
+    }
 }
 
 impl ByteData for Operations {
@@ -67,9 +77,9 @@ pub enum MathOpTypes {
     Unsigned = 1,
     Float = 2,
 }
+#[derive(Debug, Clone, Copy)]
 pub enum ArgType {
     Typed, Untyped, Dest, Func,
-    OptionalTyped, OptionalUntyped, OptionalDest, OptionalFunc,
 }
 use ArgType::*;
 
@@ -84,6 +94,16 @@ pub const COMPARISON_OP_ARGS: [ArgType; 2] = [
     Dest, Typed
 ];
 
+pub const ALLOC_ARGS : [ArgType; 2] = [
+    Dest, Typed
+];
+pub const REALLOC_ARGS : [ArgType; 3] = [
+    Dest, Typed, Typed
+];
+pub const FREE_ARGS : [ArgType; 1] = [
+    Typed
+];
+
 pub const CONTROL_FLOW_OP_ARGS: [ArgType; 2] = [
     Func, Typed //Func, condition
 ];
@@ -91,16 +111,16 @@ pub const CONTROL_FLOW_OP_ARGS: [ArgType; 2] = [
 pub const LOAD_OP_ARGS: [ArgType; 2] = [
     Dest, Typed //Reg, size
 ];
-pub const STORE_OP_ARGS: [ArgType; 3] = [
-    Dest, Typed, Typed //Data, size
+pub const STORE_OP_ARGS: [ArgType; 2] = [
+    Typed, Typed //Address, Data
 ];
 
 pub const IO_OUT_OP_ARGS: [ArgType; 3] = [
     Typed, Typed, Typed //Data, Size, Buffer
 ];
 
-pub const IO_IN_OP_ARGS: [ArgType; 3] = [
-    Typed, Typed, OptionalTyped //Address, Buffer, Size if not specified will run until oob
+pub const IO_IN_OP_ARGS: [ArgType; 2] = [
+    Typed, Typed //Address, Buffer, Size if not specified will run until oob
 ];
 
 pub const REG_OP_ARGS: [ArgType; 2] = [

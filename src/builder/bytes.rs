@@ -15,6 +15,55 @@ pub struct ByteStream {
     pub bytes: Vec<Byte>
 }
 
+impl From<Vec<ByteStream>> for ByteStream {
+    fn from(streams: Vec<ByteStream>) -> Self {
+        let mut stream = ByteStream::new();
+        for s in streams {
+            stream.emitstream(s);
+        }
+        stream
+    }
+}
+impl From<ByteStream> for Vec<Byte> {
+    fn from(stream: ByteStream) -> Self {
+        stream.bytes
+    }
+}
+impl From<ByteStream> for Vec<u8> {
+    fn from(stream: ByteStream) -> Self {
+        let mut bytes = Vec::new();
+        for byte in stream.bytes {
+            bytes.push(*byte.data as u8);
+        }
+        bytes
+    }
+}
+impl From<Vec<Byte>> for ByteStream {
+    fn from(bytes: Vec<Byte>) -> Self {
+        ByteStream {
+            pos: 0,
+            bytes
+        }
+    }
+}
+impl From<&[Byte]> for ByteStream {
+    fn from(bytes: &[Byte]) -> Self {
+        ByteStream {
+            pos: 0,
+            bytes: bytes.to_vec()
+        }
+    }
+}
+impl From<&[ByteStream]> for ByteStream {
+    fn from(streams: &[ByteStream]) -> Self {
+        let mut stream = ByteStream::new();
+        for s in streams {
+            stream.emitstream(s.clone());
+        }
+        stream
+    }
+}
+
 impl ByteStream {
     #[allow(dead_code)]
     pub fn new() -> ByteStream {
@@ -38,7 +87,6 @@ impl ByteStream {
         let mut string = String::new();
         //iterate over bytes, add type as u8 then data
         for byte in &self.bytes {
-            println!("{:?}", byte);
             //add as hex
             string.push_str(&(format!("{:02x}", byte.tp as u8)).trim());
             string.push(' ');
@@ -75,6 +123,11 @@ pub struct Byte {
     pub pos: usize,
     pub tp: Types
 }
+impl Byte {
+    pub fn unwrap(&self) -> u64 {
+        *self.data.clone()
+    }
+}
 
 //macro to take tuple of Type and Value and return a Byte
 #[macro_export]
@@ -87,6 +140,19 @@ macro_rules! typed {
         }
     };
 }
+#[macro_export]
+macro_rules! op {
+    ($op:ident) => {
+        {
+            use $crate::bytecode::ops::Operations::*;
+            Byte {
+                data: Box::new($op as u64),
+                pos: 0,
+                tp: Types::TypeOp
+            }
+        }
+    };
+}
 //macro to take a constant (u64) and return a Byte
 #[macro_export]
 macro_rules! constant {
@@ -95,6 +161,17 @@ macro_rules! constant {
             data: Box::new($val),
             pos: 0,
             tp: Types::TypeU64
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! emits {
+    ($($val:expr),*) => {
+        {
+            let mut stream = ByteStream::new();
+            $(stream.bytes.push($val);)*
+            stream
         }
     };
 }
