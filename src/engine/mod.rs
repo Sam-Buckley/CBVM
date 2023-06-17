@@ -70,4 +70,8 @@ impl Engine {
     fn free(&mut self, addr: Address) {
         self.heap.free(addr as usize).unwrap();
     }
+    fn realloc(&mut self, addr: Address, size: size_t) -> Address {
+        let addr = self.heap.realloc(addr as usize, size).unwrap() as u64;
+        addr
+    }
 }
