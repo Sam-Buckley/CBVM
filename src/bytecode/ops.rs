@@ -1,4 +1,4 @@
-#![allow(dead_code, unused_imports, unused_macros, unused_variables, unused_mut, unused_parens, unused_assignments, unused_braces, unused_import_braces)]
+#![allow(clippy::upper_case_acronyms, dead_code, unused_imports, unused_macros, unused_variables, unused_mut, unused_parens, unused_assignments, unused_braces, unused_import_braces)]
 use crate::bytecode::data::ByteData;
 use crate::builder::bytes::{Byte, ByteStream};
 #[repr(u8)]
@@ -53,7 +53,82 @@ pub enum Operations {
 
 impl From<Byte> for Operations {
     fn from(byte: Byte) -> Self {
-        unsafe { core::mem::transmute((*byte.data) as u8) }
+        match *(byte.data) as u8 {
+            0x00 => Operations::NOP,
+            0x01 => Operations::ADD,
+            0x02 => Operations::SUB,
+            0x03 => Operations::MUL,
+            0x04 => Operations::DIV,
+            0x05 => Operations::MOD,
+            0x06 => Operations::AND,
+            0x07 => Operations::OR,
+            0x08 => Operations::XOR,
+            0x09 => Operations::NOT,
+            0x0A => Operations::EQ,
+            0x0B => Operations::NEQ,
+            0x0C => Operations::LT,
+            0x0D => Operations::GT,
+            0x0E => Operations::PUSH,
+            0x0F => Operations::POP,
+            0x10 => Operations::DUP,
+            0x11 => Operations::SWAP,
+            0x12 => Operations::JMP,
+            0x13 => Operations::JZ,
+            0x14 => Operations::JNZ,
+            0x17 => Operations::LOAD,
+            0x18 => Operations::STORE,
+            0x19 => Operations::WRITE,
+            0x1A => Operations::READ,
+            0x1B => Operations::MOV,
+            0x1C => Operations::ALLOC,
+            0x1D => Operations::FREE,
+            0x1E => Operations::REALLOC,
+            0x1F => Operations::FLUSH,
+            0x64 => Operations::FUNC,
+            0x65 => Operations::RET,
+            0x66 => Operations::CALL,
+            _ => panic!("Invalid opcode: {}", byte.data)
+        }
+    }
+}
+impl From<u8> for Operations {
+    fn from(code: u8) -> Operations {
+        match code {
+            0x00 => Operations::NOP,
+            0x01 => Operations::ADD,
+            0x02 => Operations::SUB,
+            0x03 => Operations::MUL,
+            0x04 => Operations::DIV,
+            0x05 => Operations::MOD,
+            0x06 => Operations::AND,
+            0x07 => Operations::OR,
+            0x08 => Operations::XOR,
+            0x09 => Operations::NOT,
+            0x0A => Operations::EQ,
+            0x0B => Operations::NEQ,
+            0x0C => Operations::LT,
+            0x0D => Operations::GT,
+            0x0E => Operations::PUSH,
+            0x0F => Operations::POP,
+            0x10 => Operations::DUP,
+            0x11 => Operations::SWAP,
+            0x12 => Operations::JMP,
+            0x13 => Operations::JZ,
+            0x14 => Operations::JNZ,
+            0x17 => Operations::LOAD,
+            0x18 => Operations::STORE,
+            0x19 => Operations::WRITE,
+            0x1A => Operations::READ,
+            0x1B => Operations::MOV,
+            0x1C => Operations::ALLOC,
+            0x1D => Operations::FREE,
+            0x1E => Operations::REALLOC,
+            0x1F => Operations::FLUSH,
+            0x64 => Operations::FUNC,
+            0x65 => Operations::RET,
+            0x66 => Operations::CALL,
+            _ => panic!("Invalid opcode: {}", code)
+        }
     }
 }
 
@@ -87,6 +162,10 @@ pub const MATH_OP_ARGS: [ArgType; 3] = [
     Dest, Typed, Typed
 ];
 
+pub const JMP_ARGS: [ArgType; 1] = [
+    Typed
+];
+
 pub const BITWISE_OP_ARGS: [ArgType; 2] = [
     Dest, Typed
 ];
@@ -115,8 +194,8 @@ pub const STORE_OP_ARGS: [ArgType; 2] = [
     Typed, Typed //Address, Data
 ];
 
-pub const IO_OUT_OP_ARGS: [ArgType; 3] = [
-    Typed, Typed, Typed //Data, Size, Buffer
+pub const IO_OUT_OP_ARGS: [ArgType; 2] = [
+    Typed, Typed//Data, Size, Buffer
 ];
 
 pub const IO_IN_OP_ARGS: [ArgType; 2] = [

@@ -1,22 +1,21 @@
 #![allow(non_camel_case_types)]
-mod regs;
 mod callstack;
-mod stdio;
 pub mod memory;
+mod regs;
+mod stdio;
 
 use crate::{
+    builder::bytes::*,
     bytecode::{
-        ops::*,
+        data::ByteData,
         ops::ArgType::*,
         ops::Operations::{self, *},
+        ops::*,
         types::Types,
-        data::ByteData
-    },
-    builder::{
-        bytes::*,
     },
     engine::memory::Heap,
 };
+use callstack::FnCall;
 use stdio::IO;
 
 type Register = u64;
@@ -25,7 +24,6 @@ type Address = u64;
 type type_t = u8;
 type size_t = usize;
 type reg_t = usize;
-
 
 pub struct Engine {
     pub regs: regs::Registers,
@@ -83,8 +81,7 @@ impl Engine {
         self.heap.free(addr as usize).unwrap();
     }
     fn realloc(&mut self, addr: Address, size: size_t) -> Address {
-        let addr = self.heap.realloc(addr as usize, size).unwrap() as u64;
-        addr
+        self.heap.realloc(addr as usize, size).unwrap() as u64
     }
 }
 
@@ -94,101 +91,108 @@ impl Engine {
 ====================
 */
 impl Engine {
-    pub fn run (&mut self, bytes: ByteStream) {
+    pub fn run(&mut self, bytes: ByteStream) {
         self.data = bytes.clone();
         //iterate through the bytes and pass them to a handler
-       while self.ip < bytes.bytes.len() {
+        while self.ip < bytes.bytes.len() {
             let byte = bytes.bytes[self.ip].clone();
             self.handle(byte);
         }
     }
     fn handle(&mut self, byte: Byte) {
         let op: Operations = Operations::from(byte);
+        self.ip += 1;
         match op {
             ADD => {
-                self.ip += 1;
-                //let mut args = self.get_args(&MATH_OP_ARGS);
-                let dest = self.read_byte().unwrap();
-                let left = self.read_byte().unwrap();
-                let right = self.read_byte().unwrap();
-                self.move_reg(dest as usize, left+right)
-            },
+                let mut args = self.get_args(&MATH_OP_ARGS);
+                let dest = args[0];
+                let left = args[1] as u64;
+                let right = args[2] as u64;
+                self.move_reg(dest, left + right)
+            }
             SUB => {
                 let mut args = self.get_args(&MATH_OP_ARGS);
                 let dest = args[0];
                 let left = args[1];
                 let right = args[2];
                 self.regs[dest] = (left - right) as u64;
-            },
+            }
             WRITE => {
-                self.ip += 1;
-                let data = self.read_byte().unwrap();
-                let size = self.read_byte().unwrap();
-                let buffer = self.read_byte().unwrap();
+                let args = self.get_args(&IO_OUT_OP_ARGS);
+                let reg = args[0];
+                let size = args[1];
+                let data = self.regs[reg];
                 let to_write = self.heap.read(data as usize, size as usize).unwrap();
                 self.io.write(&to_write);
-                self.ip -= 1;
-            },
+            }
             FLUSH => {
-                self.ip += 1;
                 self.io.flush();
-            },
+            }
             STORE => {
-                self.ip += 1;
-                //let args = self.get_args(&[Typed]);
-                let ptr = self.read_byte().unwrap();
-                let data = self.read_byte().unwrap();
-                let bytes = hextostring(data).iter().filter(|&&x| x != 0).cloned().collect::<Vec<u8>>();
-                for (i, byte) in bytes.iter().enumerate() {
-                    self.heap.write(ptr as usize+i, *byte).unwrap();
+                let args = self.get_args(&STORE_OP_ARGS);
+                let reg = args[0];
+                let data = hextostring(args[1] as u64)
+                    .iter()
+                    .filter(|x| **x != 0)
+                    .map(|x| *x)
+                    .collect::<Vec<u8>>();
+                let ptr = self.regs[reg] as usize;
+                for i in 0..data.len() {
+                    self.heap.write(ptr + i, data[i]).unwrap();
                 }
-            },
+            }
             FUNC => {
-                self.ip += 1;
-                let mut args = self.get_args(&[Untyped]);
-                let name = args[0];
-                self.jumptable.push(name);
-                self.ip = name;
-            },
+                let name = self.read_byte().unwrap();
+                self.jumptable.push(name as usize);
+            }
             ALLOC => {
-                self.ip += 1;
                 let mut args = self.get_args(&ALLOC_ARGS);
                 let reg = args[0];
                 let size = args[1];
                 let ptr = self.alloc(size, reg);
                 self.move_reg(reg, ptr);
-                self.ip -= 1;
-            },
-            _ => todo!()
-        }
+            }
+            FREE => {
+                let args = self.get_args(&FREE_ARGS);
+                let reg = args[0];
+                let addr = self.regs[reg];
+                self.free(addr);
+            }
+            JMP => {
+                let args = self.get_args(&JMP_ARGS);
+                let addr = args[0];
+                self.ip = addr;
+            }
+            CALL => {
+                let args = self.get_args(&CALL_OP_ARGS);
+                let addr = args[0];
+                self.callstack.push(FnCall { ret: self.ip as u8 });
+                self.ip = addr;
+            }
+            _ => todo!(),
+        };
     }
     fn get_args(&mut self, args: &[ArgType]) -> Vec<usize> {
         let mut regs = Vec::new();
         for arg in args {
-            //match the arg type, typed = read 2 bytes (type, value)
-            //untyped = read 1 byte (value)
-            //dest = read 1 byte (reg)
-            //func = read next byte (func)
-            //then push the value to the regs vec
             match arg {
                 Typed => {
-                    let type_byte = self.read_byte();
-                    let value = self.read_byte();
-                    let tpr = self.handle_typed(type_byte, value);
+                    let byte = self.read_byte();
+                    let tpr = self.handle_typed(byte);
                     regs.push(tpr);
-                },
+                }
                 Untyped => {
                     let value = self.read_byte().unwrap();
                     regs.push(value as usize);
-                },
+                }
                 Dest => {
                     let reg = self.read_byte().unwrap();
                     regs.push(reg as usize);
-                },
+                }
                 Func => {
                     let func = self.read_byte().unwrap();
                     regs.push(func as usize);
-                },
+                }
             }
         }
         regs
@@ -207,31 +211,29 @@ impl Engine {
     fn previous_byte(&mut self) -> Byte {
         self.data.bytes[self.ip - 1].clone()
     }
-    fn handle_typed(&mut self, tp: Byte, byte: Byte) -> usize {
-        let tp = tp.tp;
-        let byte = *(byte.data).clone() as usize;
+    fn handle_typed(&mut self, byte: Byte) -> usize {
+        let tp = byte.tp;
+        let byte = byte.unwrap() as usize;
         use Types::*;
-        return match tp{
+        match tp {
             TypeU8 => byte,
             TypeU64 => byte,
             TypeI128 => byte,
             TypeU128 => byte,
-            TypeF32  => byte,
-            TypeF64  => byte,
-            DerefStack => {
-                self.stack.get(byte) as usize
-            },
+            TypeF32 => byte,
+            TypeF64 => byte,
+            DerefStack => self.stack.get(byte) as usize,
             DerefHeapReg => {
                 let rg = self.regs[byte];
                 self.heap.read(rg as usize, 1).unwrap()[0] as usize
-            },
+            }
             TypeI8 => byte,
             TypeAddr => byte,
             TypeReg => self.regs.data[byte] as usize,
             TypeI64 => byte,
             NoType => byte,
-            TypeFunc => self.jumptable[byte] as usize,
-            _ => panic!("Invalid type: {:?}", tp)
+            TypeFunc => self.jumptable[byte],
+            _ => panic!("Invalid type: {:?}", tp),
         }
     }
 }
