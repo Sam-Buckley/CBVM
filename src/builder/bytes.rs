@@ -1,18 +1,29 @@
-#![allow(dead_code, non_snake_case, unused_imports, unused_macros, unused_variables, unused_mut, unused_parens, unused_assignments, unused_braces, unused_import_braces)]
+#![allow(
+    dead_code,
+    non_snake_case,
+    unused_imports,
+    unused_macros,
+    unused_variables,
+    unused_mut,
+    unused_parens,
+    unused_assignments,
+    unused_braces,
+    unused_import_braces
+)]
 extern crate alloc;
 
-use alloc::vec::Vec;
 use crate::bytecode::{
+    data::ByteData,
     ops::ArgType::*,
     ops::Operations::*,
     types::Types::{self, *},
-    data::ByteData
 };
+use alloc::vec::Vec;
 
 #[derive(Debug, Clone)]
 pub struct ByteStream {
     pos: usize,
-    pub bytes: Vec<Byte>
+    pub bytes: Vec<Byte>,
 }
 
 impl From<Vec<ByteStream>> for ByteStream {
@@ -40,17 +51,14 @@ impl From<ByteStream> for Vec<u8> {
 }
 impl From<Vec<Byte>> for ByteStream {
     fn from(bytes: Vec<Byte>) -> Self {
-        ByteStream {
-            pos: 0,
-            bytes
-        }
+        ByteStream { pos: 0, bytes }
     }
 }
 impl From<&[Byte]> for ByteStream {
     fn from(bytes: &[Byte]) -> Self {
         ByteStream {
             pos: 0,
-            bytes: bytes.to_vec()
+            bytes: bytes.to_vec(),
         }
     }
 }
@@ -69,7 +77,7 @@ impl ByteStream {
     pub fn new() -> ByteStream {
         ByteStream {
             pos: 0,
-            bytes: Vec::new()
+            bytes: Vec::new(),
         }
     }
     pub fn emit(&mut self, byte: Byte) -> Self {
@@ -88,30 +96,32 @@ impl ByteStream {
         //iterate over bytes, add type as u8 then data
         for byte in &self.bytes {
             //add as hex
-            string.push_str(&(format!("{:02x}", byte.tp as u8)).trim());
+            string.push_str((format!("{:02x}", byte.tp as u8)).trim());
             string.push(' ');
             //add as hex
             let data = byte.clone().data.clone();
             //filter any null bytes
-            string.push_str(&(match byte.tp {
-                //format as hex, numbers should be 2 digits+ if not add a 0
-                //if the number is larger than 2 digits, remove any whitespace
-                TypeU8 => format!("{:02x}", *data),
-                TypeU64 => format!("{:016x}", *data),
-                TypeI8 => format!("{:02x}", *data),
-                TypeI64 => format!("{:016x}", *data),
-                TypeF32 => format!("{:08x}", *data),
-                TypeF64 => format!("{:016x}", *data),
-                TypeU128 => format!("{:032x}", *data),
-                TypeI128 => format!("{:032x}", *data),
-                TypeAddr => format!("{:016x}", *data),
-                TypeReg => format!("{:016x}", *data),
-                TypeFunc => format!("{:016x}", *data),
-                DerefStack => format!("{:016x}", *data),
-                DerefHeapReg => format!("{:016x}", *data),
-                TypeOp => "".to_string(),
-                NoType => "".to_string()
-            } + " "))
+            string.push_str(
+                &(match byte.tp {
+                    //format as hex, numbers should be 2 digits+ if not add a 0
+                    //if the number is larger than 2 digits, remove any whitespace
+                    TypeU8 => format!("{:02x}", *data),
+                    TypeU64 => format!("{:016x}", *data),
+                    TypeI8 => format!("{:02x}", *data),
+                    TypeI64 => format!("{:016x}", *data),
+                    TypeF32 => format!("{:08x}", *data),
+                    TypeF64 => format!("{:016x}", *data),
+                    TypeU128 => format!("{:032x}", *data),
+                    TypeI128 => format!("{:032x}", *data),
+                    TypeAddr => format!("{:016x}", *data),
+                    TypeReg => format!("{:016x}", *data),
+                    TypeFunc => format!("{:016x}", *data),
+                    DerefStack => format!("{:016x}", *data),
+                    DerefHeapReg => format!("{:016x}", *data),
+                    TypeOp => "".to_string(),
+                    NoType => "".to_string(),
+                } + " "),
+            )
         }
         string
     }
@@ -121,7 +131,7 @@ impl ByteStream {
 pub struct Byte {
     pub data: Box<u64>,
     pub pos: usize,
-    pub tp: Types
+    pub tp: Types,
 }
 impl Byte {
     pub fn unwrap(&self) -> u64 {
@@ -136,22 +146,20 @@ macro_rules! typed {
         Byte {
             data: Box::new($val),
             pos: 0,
-            tp: Types::$tp
+            tp: Types::$tp,
         }
     };
 }
 #[macro_export]
 macro_rules! op {
-    ($op:ident) => {
-        {
-            use $crate::bytecode::ops::Operations::*;
-            Byte {
-                data: Box::new($op as u64),
-                pos: 0,
-                tp: Types::TypeOp
-            }
+    ($op:ident) => {{
+        use $crate::bytecode::ops::Operations::*;
+        Byte {
+            data: Box::new($op as u64),
+            pos: 0,
+            tp: Types::TypeOp,
         }
-    };
+    }};
 }
 //macro to take a constant (u64) and return a Byte
 #[macro_export]
@@ -160,7 +168,7 @@ macro_rules! constant {
         Byte {
             data: Box::new($val),
             pos: 0,
-            tp: Types::TypeU64
+            tp: Types::TypeU64,
         }
     };
 }
@@ -207,7 +215,7 @@ macro_rules! func {
         Byte {
             data: Box::new(stringtohex($name.to_string())),
             pos: 0,
-            tp: Types::TypeFunc
+            tp: Types::TypeFunc,
         }
     };
 }

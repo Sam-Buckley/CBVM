@@ -134,7 +134,7 @@ impl Engine {
                 let data = hextostring(args[1] as u64)
                     .iter()
                     .filter(|x| **x != 0)
-                    .map(|x| *x)
+                    .copied()
                     .collect::<Vec<u8>>();
                 let ptr = self.regs[reg] as usize;
                 for i in 0..data.len() {
