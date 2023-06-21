@@ -2,6 +2,11 @@
 name = "cbvm"
 version = "0.1.0"
 edition = "2021"
+authors = ["Sam Buckley samuel_buckley@outlook.com"]
+description = "Cross bytes virtual machine used for building, running and reading CBVM files"
+license = "AGPL-3.0"
+repository = "https://github.com/sam-buckley/cbvm"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
