@@ -17,6 +17,7 @@ pub enum Types {
     TypeOp = 0x0B,
     DerefStack = 0x0C,
     DerefHeapReg = 0x0D,
+    DerefStackReg = 0x0E,
     NoType
 }
 impl From<u8> for Types {
@@ -36,6 +37,7 @@ impl From<u8> for Types {
             0x0B => Types::TypeOp,
             0x0C => Types::DerefStack,
             0x0D => Types::DerefHeapReg,
+            0x0E => Types::DerefStackReg,
             _ => Types::NoType
         }
     }
