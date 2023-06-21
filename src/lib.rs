@@ -9,11 +9,11 @@
     unused_braces,
     unused_import_braces
 )]
-mod builder;
-mod bytecode;
-mod reader;
+pub mod builder;
+pub mod bytecode;
+pub mod reader;
 use bytecode::{data::ByteData, ops::ArgType::*, ops::Operations::*, types::Types};
-mod engine;
+pub mod engine;
 use builder::bytes::*;
 use engine::memory::{Heap, Stack};
 use std::time::Instant;
