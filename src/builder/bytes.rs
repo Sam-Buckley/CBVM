@@ -72,6 +72,15 @@ impl From<&[ByteStream]> for ByteStream {
     }
 }
 
+impl Default for ByteStream {
+    fn default() -> ByteStream {
+        ByteStream {
+            pos: usize::default(),
+            bytes: Vec::default(),
+        }
+    }
+}
+
 impl ByteStream {
     #[allow(dead_code)]
     pub fn new() -> ByteStream {

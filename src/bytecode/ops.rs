@@ -44,7 +44,7 @@ pub enum Operations {
 
     //registers
     MOV = 0x1B,
-
+    
     //functions
     FUNC = 0x64,
     RET = 0x65,

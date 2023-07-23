@@ -122,7 +122,7 @@ impl Engine {
                 let reg = args[0];
                 let size = args[1];
                 let data = self.regs[reg];
-                let to_write = self.heap.read(data as usize, size as usize).unwrap();
+                let to_write = self.heap.read(data as usize, size).unwrap();
                 self.io.write(&to_write);
             }
             FLUSH => {
@@ -132,14 +132,13 @@ impl Engine {
                 let args = self.get_args(&STORE_OP_ARGS);
                 let reg = args[0];
                 let data = hextostring(args[1] as u64)
-                    .iter()
-                    .filter(|x| **x != 0)
-                    .copied()
+                    .into_iter()
+                    .filter(|x| *x != 0)
                     .collect::<Vec<u8>>();
                 let ptr = self.regs[reg] as usize;
-                for i in 0..data.len() {
+                (0..data.len()).for_each(|i| {
                     self.heap.write(ptr + i, data[i]).unwrap();
-                }
+                });
             }
             FUNC => {
                 let name = self.read_byte().unwrap();
@@ -168,6 +167,16 @@ impl Engine {
                 let addr = args[0];
                 self.callstack.push(FnCall { ret: self.ip as u8 });
                 self.ip = addr;
+            }
+            RET => {
+                let ret = self.callstack.pop().unwrap();
+                self.ip = ret.ret as usize;
+            }
+            MOV => {
+                let args = self.get_args(&REG_OP_ARGS);
+                let addr = args[0];
+                let value = args[1];
+                self.move_reg(addr, value as u64);
             }
             _ => todo!(),
         };

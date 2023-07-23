@@ -1,12 +1,6 @@
-//i want 10 data registers
-//an address register for the top and current of the stack
-//a program counter
-
-//create a set of pointers to 64 bit values
-
 #[derive(Debug, Clone, Copy)]
 pub struct Registers {
-    pub data: [u64; 60]
+    pub data: [u64; 60],
 }
 
 impl core::ops::Index<usize> for Registers {
@@ -23,8 +17,6 @@ impl core::ops::IndexMut<usize> for Registers {
 }
 impl Default for Registers {
     fn default() -> Self {
-        Self {
-            data: [0; 60]
-        }
+        Self { data: [0; 60] }
     }
 }
