@@ -31,6 +31,8 @@ fn main() {
         "debug".to_string(),
         "help".to_string(),
         "view".to_string(),
+        "asm".to_string(),
+    
     ];
     //check first arg to be in list of cmds
     if cmds.contains(&args[1]) {
@@ -39,6 +41,7 @@ fn main() {
             "debug" => debug(),
             "help" => help(),
             "view" => view(),
+            "asm" => asm(),
             _ => println!("Invalid command"),
         }
     } else {
@@ -87,6 +90,7 @@ fn help() {
     println!("debug <path> - run vm with debug");
     println!("help - print help");
     println!("view <path> - view bytecode");
+    println!("asm <path> - view asm");
 }
 
 //view function, take path from cli, read file, group bytes, and print bytes
