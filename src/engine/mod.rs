@@ -26,6 +26,7 @@ type size_t = usize;
 type reg_t = usize;
 
 pub struct Engine {
+    accumulator: u64,
     pub regs: regs::Registers,
     callstack: callstack::CallStack,
     pub heap: memory::Heap,
@@ -56,6 +57,7 @@ impl Engine {
     }
     pub fn new() -> Self {
         Self {
+            accumulator: 0,
             regs: regs::Registers::default(),
             callstack: callstack::CallStack::default(),
             heap: memory::Heap::default(),
@@ -69,6 +71,7 @@ impl Engine {
     }
     pub fn new_with_size(heap_size: size_t) -> Self {
         Self {
+            accumulator: 0,
             regs: regs::Registers::default(),
             callstack: callstack::CallStack::default(),
             heap: memory::Heap::new(heap_size),
@@ -104,6 +107,10 @@ impl Engine {
             let byte = bytes.bytes[self.ip].clone();
             self.handle(byte);
         }
+    }
+    pub fn debug(&mut self, bytes: ByteStream) {
+        self.debug = true;
+        self.run(bytes);
     }
     fn handle(&mut self, byte: Byte) {
         let op: Operations = Operations::from(byte);

@@ -1,6 +1,5 @@
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
-#[allow(dead_code)]
 pub enum Types {
     TypeU8 = 0x00,
     TypeU64 = 0x01,

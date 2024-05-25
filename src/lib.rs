@@ -12,6 +12,7 @@
 pub mod builder;
 pub mod bytecode;
 pub mod reader;
+pub mod asm;
 use bytecode::{data::ByteData, ops::ArgType::*, ops::Operations::*, types::Types};
 pub mod engine;
 use builder::bytes::*;
@@ -21,7 +22,21 @@ use std::str::from_utf8_unchecked;
 use std::time::Instant;
 use std::{env, string};
 
+pub fn read (path: &str) -> Vec<u8> {
+    let mut reader = Reader::new(path);
+    reader.read();
+    reader.group();
+    reader.bytes.into()
+}
 
+pub fn run(bytes: Vec<u8>) {
+    let mut engine = engine::Engine::new();
+    let start = Instant::now();
+    engine.run(bytes.into());
+    let duration = start.elapsed();
+    println!("\nTime elapsed in running VM is: {:?}", duration);
+}
 
-
-//main function to take a filename and run the vm
+fn main(){
+    
+}

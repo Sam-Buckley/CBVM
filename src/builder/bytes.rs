@@ -1,15 +1,4 @@
-#![allow(
-    dead_code,
-    non_snake_case,
-    unused_imports,
-    unused_macros,
-    unused_variables,
-    unused_mut,
-    unused_parens,
-    unused_assignments,
-    unused_braces,
-    unused_import_braces
-)]
+
 extern crate alloc;
 
 use crate::bytecode::{
@@ -18,6 +7,7 @@ use crate::bytecode::{
     ops::Operations::*,
     types::Types::{self, *},
 };
+use crate::reader::Reader;
 use alloc::vec::Vec;
 
 #[derive(Debug, Clone)]
@@ -40,6 +30,14 @@ impl From<ByteStream> for Vec<Byte> {
         stream.bytes
     }
 }
+
+impl From<Vec<u8>> for ByteStream {
+    fn from(bytes: Vec<u8>) -> Self {
+        let mut reader = Reader::new_read(&bytes);
+        reader.group()
+    }
+}
+
 impl From<ByteStream> for Vec<u8> {
     fn from(stream: ByteStream) -> Self {
         let mut bytes = Vec::new();
@@ -226,6 +224,13 @@ pub fn stringtohex(string: String) -> u64 {
 impl Byte {
     fn stringify(&self) -> String {
         format!("{:02x}", *(self.data))
+    }
+    //function to format it like assembly, for every function put start of line, then args until next function type
+    fn assembly(&self) -> String {
+        let mut string = String::new();
+        string.push_str(&format!("{:?}", self.tp));
+        string.push_str(&format!("{:02x} ", *(self.data)));
+        string
     }
 }
 

@@ -1,4 +1,4 @@
-#![allow(clippy::upper_case_acronyms, dead_code, unused_imports, unused_macros, unused_variables, unused_mut, unused_parens, unused_assignments, unused_braces, unused_import_braces)]
+
 use crate::bytecode::data::ByteData;
 use crate::builder::bytes::{Byte, ByteStream};
 #[repr(u8)]

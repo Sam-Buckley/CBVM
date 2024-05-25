@@ -33,17 +33,25 @@ impl Reader {
             bytes: ByteStream::new(),
         }
     }
+    pub fn new_read(data: &Vec<u8>) -> Reader {
+        Reader {
+            pos: 0,
+            file: File::open("temp").unwrap_or(File::create("temp").unwrap()),
+            stream: data.clone(),
+            bytes: ByteStream::new(),
+        }
+    }
     pub fn read(&mut self) -> () {
         let mut data = Vec::new();
         self.file.read_to_end(&mut data).unwrap();
-        data.retain(|&x| x != b'\n');
         self.stream = data;
     }
-    pub fn group(&mut self) {
+    pub fn group(&mut self) -> ByteStream {
         while self.pos < self.stream.len() {
             self.handle(self.stream[self.pos]);
             self.pos += 1;
         }
+        self.bytes.clone()
     }
     //function to handle a number, take the number of arguments from the contant in ops and add to bytestream
     fn handle(&mut self, n: u8) {
