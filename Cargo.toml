@@ -11,7 +11,7 @@ repository = "https://github.com/sam-buckley/cbvm"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
-path = "src/lib.rs"
+path = "src/main.rs"
 name = "cbvm"
 
 [dependencies]

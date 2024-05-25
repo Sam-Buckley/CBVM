@@ -22,6 +22,14 @@ use std::time::Instant;
 use std::{env, string};
 
 
-
-
-//main function to take a filename and run the vm
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    let mut reader = Reader::new(&args[1]);
+    reader.read();
+    reader.group();
+    let mut engine = engine::Engine::new();
+    let start = Instant::now();
+    engine.run(reader.bytes);
+    let duration = start.elapsed();
+    println!("\nTime elapsed in running VM is: {:?}", duration);
+}
