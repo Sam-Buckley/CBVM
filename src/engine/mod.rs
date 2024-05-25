@@ -118,17 +118,15 @@ impl Engine {
         match op {
             ADD => {
                 let mut args = self.get_args(&MATH_OP_ARGS);
-                let dest = args[0];
-                let left = args[1] as u64;
-                let right = args[2] as u64;
-                self.move_reg(dest, left + right)
+                let left = args[0] as u64;
+                let right = args[1] as u64;
+                self.accumulator =  left + right
             }
             SUB => {
                 let mut args = self.get_args(&MATH_OP_ARGS);
-                let dest = args[0];
-                let left = args[1];
-                let right = args[2];
-                self.regs[dest] = (left - right) as u64;
+                let left = args[0];
+                let right = args[1];
+                self.accumulator = (left - right) as u64;
             }
             WRITE => {
                 let args = self.get_args(&IO_OUT_OP_ARGS);

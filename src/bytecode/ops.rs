@@ -166,8 +166,8 @@ pub enum ArgType {
 }
 use ArgType::*;
 
-pub const MATH_OP_ARGS: [ArgType; 3] = [
-    Dest, Typed, Typed
+pub const MATH_OP_ARGS: [ArgType; 2] = [
+    Typed, Typed
 ];
 
 pub const JMP_ARGS: [ArgType; 1] = [
