@@ -43,6 +43,17 @@ pub struct Engine {
 ====================
 */
 impl Engine {
+    pub fn alloc(&mut self, size: size_t, reg: reg_t) -> Address {
+        let addr = self.heap.allocate(size).unwrap() as u64;
+        self.move_reg(reg, addr);
+        addr
+    }
+    fn free(&mut self, addr: Address) {
+        self.heap.free(addr as usize).unwrap();
+    }
+    pub fn move_reg(&mut self, reg: reg_t, value: u64) {
+        self.regs[reg] = value; // optimized
+    }
     pub fn new() -> Self {
         Self {
             regs: regs::Registers::default(),
@@ -69,19 +80,14 @@ impl Engine {
             jumptable: Vec::new(),
         }
     }
-    pub fn move_reg(&mut self, reg: reg_t, value: u64) {
-        self.regs[reg] = value;
-    }
-    pub fn alloc(&mut self, size: size_t, reg: reg_t) -> Address {
-        let addr = self.heap.allocate(size).unwrap() as u64;
-        self.move_reg(reg, addr);
-        addr
-    }
-    fn free(&mut self, addr: Address) {
-        self.heap.free(addr as usize).unwrap();
-    }
     fn realloc(&mut self, addr: Address, size: size_t) -> Address {
         self.heap.realloc(addr as usize, size).unwrap() as u64
+    }
+}
+
+impl Default for Engine {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -130,15 +136,13 @@ impl Engine {
             }
             STORE => {
                 let args = self.get_args(&STORE_OP_ARGS);
-                let reg = args[0];
-                let data = hextostring(args[1] as u64)
-                    .into_iter()
-                    .filter(|x| *x != 0)
-                    .collect::<Vec<u8>>();
-                let ptr = self.regs[reg] as usize;
-                (0..data.len()).for_each(|i| {
-                    self.heap.write(ptr + i, data[i]).unwrap();
-                });
+                let addr = args[0];
+                let len = args[1];
+                //read as many args as the length
+                for i in 0..len {
+                    let byte = self.read_byte().unwrap();
+                    let res = self.heap.write(addr as usize + i, byte as u8);
+                }
             }
             FUNC => {
                 let name = self.read_byte().unwrap();
@@ -178,13 +182,14 @@ impl Engine {
                 let value = args[1];
                 self.move_reg(addr, value as u64);
             }
-            _ => todo!(),
+            _ => println!("Invalid opcode: {:?}", op),
         };
     }
     fn get_args(&mut self, args: &[ArgType]) -> Vec<usize> {
         let mut regs = Vec::new();
         for arg in args {
-            match arg {
+            match *arg {
+                //remove reference, reduce indirection
                 Typed => {
                     let byte = self.read_byte();
                     let tpr = self.handle_typed(byte);

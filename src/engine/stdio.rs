@@ -1,7 +1,7 @@
 extern crate alloc;
-use std::io::{Read, Write};
-use alloc::vec::Vec;
 use alloc::string::String;
+use alloc::vec::Vec;
+use std::io::{Read, Write};
 
 pub struct IO {
     pub in_buffer: Vec<u8>,

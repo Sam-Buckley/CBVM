@@ -15,11 +15,13 @@ use crate::{
 };
 use std::{fs::File, io::Read};
 
-struct Reader {
+
+
+pub struct Reader {
     pos: usize,
     file: File,
-    stream: Vec<u8>,
-    bytes: ByteStream,
+    pub stream: Vec<u8>,
+    pub bytes: ByteStream,
 }
 
 impl Reader {
@@ -31,52 +33,41 @@ impl Reader {
             bytes: ByteStream::new(),
         }
     }
-    pub fn read(&mut self) -> Result<Vec<u8>, ()> {
-        //split the file by spaces and remove empty strings, read the entire file
+    pub fn read(&mut self) -> () {
         let mut data = Vec::new();
         self.file.read_to_end(&mut data).unwrap();
-        let mut new = Vec::new();
-        for i in data.split(|x| *x == b' ' || *x == b'\n') {
-            if !i.is_empty() {
-                new.push(i);
-            }
-        }
-        //convert the strings to u8s
-        let new: Vec<u8> = new
-            .iter()
-            .map(|x| {
-                let mut num = 0;
-                for i in *x {
-                    num = num * 16 + u8::from_str_radix(&i.to_string(), 16).unwrap();
-                }
-                num
-            })
-            .collect();
-        self.stream = new.clone();
-        Ok(new)
+        data.retain(|&x| x != b'\n');
+        self.stream = data;
     }
-    fn group(&mut self, data: Vec<u8>) {
-        let mut ptr = 0;
-        while ptr < data.len() {
-            self.handle(data[ptr]);
-        }
-    }
-    fn read_byte(&mut self) -> Result<u8, ()> {
-        if self.pos < self.stream.len() {
-            let byte = self.stream[self.pos];
+    pub fn group(&mut self) {
+        while self.pos < self.stream.len() {
+            self.handle(self.stream[self.pos]);
             self.pos += 1;
-            Ok(byte)
-        } else {
-            Err(())
         }
     }
-    fn handle(&mut self, item: u8) {
-        match Operations::from(item) {
-            FUNC => {
-                self.bytes.emit(op!(FUNC));
-                self.bytes.emitstream(stream!((TypeU64, 0x0)));
-            }
-            _ => todo!(),
+    //function to handle a number, take the number of arguments from the contant in ops and add to bytestream
+    fn handle(&mut self, n: u8) {
+        let tp = Types::from(n);
+        self.next();
+        let arg = self.view() as u64;
+        let byte = Byte{
+            data: Box::new(arg),
+            pos: 0,
+            tp: tp,
+        };
+        self.bytes.emit(byte);
+    }
+    //functions to view current item in data, next, and increase counter of position
+    fn view(&self) -> u8 {
+        self.stream[self.pos]
+    }
+    fn next(&mut self) {
+        if self.pos + 1 >= self.stream.len() {
+            return;
         }
+        self.pos += 1;
+    }
+    fn peek(&self) -> u8 {
+        self.stream[self.pos + 1]
     }
 }

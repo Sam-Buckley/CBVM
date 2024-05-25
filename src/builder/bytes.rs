@@ -104,34 +104,8 @@ impl ByteStream {
         let mut string = String::new();
         //iterate over bytes, add type as u8 then data
         for byte in &self.bytes {
-            //add as hex
-            string.push_str((format!("{:02x}", byte.tp as u8)).trim());
-            string.push(' ');
-            //add as hex
-            let data = byte.clone().data.clone();
-            //filter any null bytes
-            string.push_str(
-                &(match byte.tp {
-                    //format as hex, numbers should be 2 digits+ if not add a 0
-                    //if the number is larger than 2 digits, remove any whitespace
-                    TypeU8 => format!("{:02x}", *data),
-                    TypeU64 => format!("{:016x}", *data),
-                    TypeI8 => format!("{:02x}", *data),
-                    TypeI64 => format!("{:016x}", *data),
-                    TypeF32 => format!("{:08x}", *data),
-                    TypeF64 => format!("{:016x}", *data),
-                    TypeU128 => format!("{:032x}", *data),
-                    TypeI128 => format!("{:032x}", *data),
-                    TypeAddr => format!("{:016x}", *data),
-                    TypeReg => format!("{:016x}", *data),
-                    TypeFunc => format!("{:016x}", *data),
-                    DerefStack => format!("{:016x}", *data),
-                    DerefHeapReg => format!("{:016x}", *data),
-                    DerefStackReg => format!("{:016x}", *data),
-                    TypeOp => "".to_string(),
-                    NoType => "".to_string(),
-                } + " "),
-            )
+            string.push(byte.tp as u8 as char);
+            string.push(char::from_u32(*byte.data as u32).unwrap_or('\0'));
         }
         string
     }
@@ -182,7 +156,19 @@ macro_rules! constant {
         }
     };
 }
-
+#[macro_export]
+macro_rules! string {
+    //turn a string into a line of byte!(TypeU8, val)
+    ($val:expr) => {
+        {
+            let mut stream = ByteStream::new();
+            for c in $val.chars() {
+                stream.emitstream(stream!((TypeU8, c as u64)));
+            }
+            stream
+        }
+    };
+}
 #[macro_export]
 macro_rules! emits {
     ($($val:expr),*) => {
@@ -232,7 +218,7 @@ macro_rules! func {
 pub fn stringtohex(string: String) -> u64 {
     let mut hex = String::new();
     for c in string.chars() {
-        hex.push_str(&(format!("{:02x}", c as u8)).trim());
+        hex.push_str((format!("{:02x}", c as u8)).trim());
     }
     u64::from_str_radix(&hex, 16).unwrap()
 }
@@ -240,5 +226,23 @@ pub fn stringtohex(string: String) -> u64 {
 impl Byte {
     fn stringify(&self) -> String {
         format!("{:02x}", *(self.data))
+    }
+}
+
+//implement display for Byte, make it look like a programming language
+impl std::fmt::Display for Byte {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:02x}", *(self.data))
+    }
+}
+//implement display for ByteStream, make it look like a programming language
+impl std::fmt::Display for ByteStream {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut string = String::new();
+        for byte in &self.bytes {
+            //format is Type and Data, then a space
+            string.push_str(&format!("{:x}{:02x} ", byte.tp as u8, *(byte.data)));
+        }
+        write!(f, "{}", string)
     }
 }
