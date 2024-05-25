@@ -201,7 +201,7 @@ pub const CONTROL_FLOW_OP_ARGS: [ArgType; 2] = [
 ];
 
 pub const LOAD_OP_ARGS: [ArgType; 2] = [
-    Typed, Typed //Reg, size
+    Dest, Typed //Reg, size
 ];
 pub const STORE_OP_ARGS: [ArgType; 2] = [
     Typed, Typed //Address, Data

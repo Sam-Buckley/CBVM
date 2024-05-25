@@ -148,6 +148,13 @@ impl Engine {
                     let res = self.heap.write(addr as usize + i, byte as u8);
                 }
             }
+            LOAD => {
+                let args = self.get_args(&LOAD_OP_ARGS);
+                let addr = args[0];
+                let location = args[1];
+                let data = self.heap.read(location as usize, 1).unwrap();
+                self.move_reg(addr, data[0] as u64);
+            }
             FUNC => {
                 let name = self.read_byte().unwrap();
                 self.jumptable.push(name as usize);
