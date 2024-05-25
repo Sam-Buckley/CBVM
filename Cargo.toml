@@ -1,6 +1,6 @@
 [package]
 name = "cbvm"
-version = "0.5.5"
+version = "0.5.6"
 edition = "2021"
 authors = ["Sam Buckley samuel_buckley@outlook.com"]
 description = "Cross bytes virtual machine used for building, running and reading CBVM files"
