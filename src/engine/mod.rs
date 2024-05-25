@@ -134,8 +134,7 @@ impl Engine {
                 let args = self.get_args(&IO_OUT_OP_ARGS);
                 let reg = args[0];
                 let size = args[1];
-                let data = self.regs[reg];
-                let to_write = self.heap.read(data as usize, size).unwrap();
+                let to_write = self.heap.read(reg as usize, size).unwrap();
                 self.io.write(&to_write);
             }
             FLUSH => {
@@ -188,6 +187,30 @@ impl Engine {
                 let addr = args[0];
                 let value = args[1];
                 self.move_reg(addr, value as u64);
+            }
+            WRACC => {
+                let args = self.get_args(&WRACC_ARGS);
+                let addr = args[0];
+                let value = self.accumulator;
+                self.move_reg(addr, value);
+            }
+            REACC => {
+                let args = self.get_args(&RDACC_ARGS);
+                let addr = args[0];
+                let value = self.regs[addr];
+                self.accumulator = value;
+            }
+            PUSH => {
+                let args = self.get_args(&PUSH_OP_ARGS);
+                let reg = args[0];
+                let value = self.regs[reg];
+                self.stack.push(value as u8);
+            }
+            POP => {
+                let args = self.get_args(&REG_OP_ARGS);
+                let reg = args[0];
+                let value = self.stack.pop() as u64;
+                self.move_reg(reg, value);
             }
             _ => println!("Invalid opcode: {:?}", op),
         };

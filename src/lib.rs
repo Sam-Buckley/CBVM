@@ -38,5 +38,9 @@ pub fn run(bytes: Vec<u8>) {
 }
 
 fn main(){
-    
+    //read bytecode.cbvm
+    let mut reader = Reader::new("bytecode.cbvm");
+    reader.read();
+    reader.group();
+    println!("{}", reader.bytes);
 }

@@ -49,6 +49,10 @@ pub enum Operations {
     FUNC = 0x64,
     RET = 0x65,
     CALL = 0x66,
+    
+    //accumulator
+    WRACC = 0x67,
+    REACC = 0x68,
 }
 
 impl From<Byte> for Operations {
@@ -87,7 +91,9 @@ impl From<Byte> for Operations {
             0x64 => Operations::FUNC,
             0x65 => Operations::RET,
             0x66 => Operations::CALL,
-            _ => panic!("Invalid opcode: {}", byte.data)
+            0x67 => Operations::WRACC,
+            0x68 => Operations::REACC,
+            _ => panic!("Invalid opcode: {}", *(byte.data) as u8)
         }
     }
 }
@@ -127,6 +133,8 @@ impl From<u8> for Operations {
             0x64 => Operations::FUNC,
             0x65 => Operations::RET,
             0x66 => Operations::CALL,
+            0x67 => Operations::WRACC,
+            0x68 => Operations::REACC,
             _ => panic!("Invalid opcode: {}", code)
         }
     }
@@ -165,7 +173,12 @@ pub const MATH_OP_ARGS: [ArgType; 3] = [
 pub const JMP_ARGS: [ArgType; 1] = [
     Typed
 ];
-
+pub const RDACC_ARGS: [ArgType; 1] = [
+    Dest
+];
+pub const WRACC_ARGS: [ArgType; 1] = [
+    Typed
+];
 pub const BITWISE_OP_ARGS: [ArgType; 2] = [
     Dest, Typed
 ];
@@ -188,7 +201,7 @@ pub const CONTROL_FLOW_OP_ARGS: [ArgType; 2] = [
 ];
 
 pub const LOAD_OP_ARGS: [ArgType; 2] = [
-    Dest, Typed //Reg, size
+    Typed, Typed //Reg, size
 ];
 pub const STORE_OP_ARGS: [ArgType; 2] = [
     Typed, Typed //Address, Data
