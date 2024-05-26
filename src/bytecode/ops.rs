@@ -44,6 +44,8 @@ pub enum Operations {
 
     //registers
     MOV = 0x1B,
+    INC = 0x15,
+    DEC = 0x16,
     
     //functions
     FUNC = 0x64,
@@ -84,6 +86,8 @@ impl From<Byte> for Operations {
             0x19 => Operations::WRITE,
             0x1A => Operations::READ,
             0x1B => Operations::MOV,
+            0x15 => Operations::INC,
+            0x16 => Operations::DEC,
             0x1C => Operations::ALLOC,
             0x1D => Operations::FREE,
             0x1E => Operations::REALLOC,
@@ -126,6 +130,8 @@ impl From<u8> for Operations {
             0x19 => Operations::WRITE,
             0x1A => Operations::READ,
             0x1B => Operations::MOV,
+            0x15 => Operations::INC,
+            0x16 => Operations::DEC,
             0x1C => Operations::ALLOC,
             0x1D => Operations::FREE,
             0x1E => Operations::REALLOC,
@@ -225,4 +231,12 @@ pub const CALL_OP_ARGS: [ArgType; 1] = [
 
 pub const PUSH_OP_ARGS: [ArgType; 1] = [
     Typed //Value
+];
+
+
+pub const INC_OP_ARGS: [ArgType; 1] = [
+    Dest //Reg
+];
+pub const DEC_OP_ARGS: [ArgType; 1] = [
+    Dest //Reg
 ];

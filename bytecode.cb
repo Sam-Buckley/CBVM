@@ -1,0 +1,7 @@
+
+FUNC 64u0 
+ALLOC [1] 8ub 
+STORE [1] 8ub 8u68 8u65 8u6c 8u6c 8u6f 8u20 8u77 8u6f 8u72 8u6c 8u64 
+WRITE 8u1 8ub 
+FLUSH 
+FREE 8u1 

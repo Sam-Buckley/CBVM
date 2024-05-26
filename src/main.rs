@@ -10,6 +10,7 @@
     unused_import_braces
 )]
 pub mod builder;
+use std::io::Write;
 pub mod bytecode;
 pub mod reader;
 use bytecode::{data::ByteData, ops::ArgType::*, ops::Operations::*, types::Types};
@@ -17,21 +18,29 @@ pub mod engine;
 use builder::bytes::*;
 use engine::memory::{Heap, Stack};
 use reader::Reader;
+use std::io::Read;
 use std::str::from_utf8_unchecked;
 use std::time::Instant;
 use std::{env, string};
 pub mod asm;
+use cbasm;
 
 
 fn main() {
+
     //first arg is what cmd to do, second is path
     let args: Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        help();
+        return;
+    }
     let cmds = vec![
         "run".to_string(),
         "debug".to_string(),
         "help".to_string(),
         "view".to_string(),
         "asm".to_string(),
+        "compile".to_string()
     
     ];
     //check first arg to be in list of cmds
@@ -42,6 +51,7 @@ fn main() {
             "help" => help(),
             "view" => view(),
             "asm" => asm(),
+            "compile" => compile(),
             _ => println!("Invalid command"),
         }
     } else {
@@ -91,6 +101,20 @@ fn help() {
     println!("help - print help");
     println!("view <path> - view bytecode");
     println!("asm <path> - view asm");
+    println!("compile <path> - compile to bytecode");
+}
+
+fn compile() {
+    //take file path from cli
+    let args: Vec<String> = env::args().collect();
+    //read file
+    let mut buf = Vec::new();
+    let mut file = std::fs::File::open(&args[2]).unwrap();
+    file.read_to_end(&mut buf).unwrap();
+    let code = cbasm::build(String::from_utf8(buf).unwrap());
+    //write to out.cb
+    let mut file = std::fs::File::create("out.cb").unwrap();
+    file.write_all(code.stringify().as_bytes()).unwrap();
 }
 
 //view function, take path from cli, read file, group bytes, and print bytes

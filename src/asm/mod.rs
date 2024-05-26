@@ -23,7 +23,7 @@ pub fn mkasm(stream: ByteStream) -> String {
                 asm.push_str(&format!("8u{:x} ", *(byte.data)));
             }
             TypeFunc => {
-                asm.push_str(&format!("\n:{:?} ", Operations::from(*(byte.data) as u8)));
+                asm.push_str(&format!(":{:?} ", byte.data));
             },
             TypeAddr => {
                 asm.push_str(&format!("@{:x} ", *(byte.data)));

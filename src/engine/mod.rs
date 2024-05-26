@@ -102,6 +102,15 @@ impl Default for Engine {
 impl Engine {
     pub fn run(&mut self, bytes: ByteStream) {
         self.data = bytes.clone();
+        //find all TypeFuncs and store them in a jumptable
+        for i in 0..bytes.bytes.len() {
+            let byte = bytes.bytes[i].clone();
+            match byte.tp {
+                Types::TypeFunc => self.jumptable.push(byte.unwrap() as usize),
+                _ => (),
+            }
+        }
+        println!("{:?}", self.jumptable);
         //iterate through the bytes and pass them to a handler
         while self.ip < bytes.bytes.len() {
             let byte = bytes.bytes[self.ip].clone();
@@ -116,6 +125,9 @@ impl Engine {
         let op: Operations = Operations::from(byte);
         self.ip += 1;
         match op {
+            NOP => {
+                ()
+            }
             ADD => {
                 let mut args = self.get_args(&MATH_OP_ARGS);
                 let left = args[0] as u64;
@@ -156,8 +168,8 @@ impl Engine {
                 self.move_reg(addr, data[0] as u64);
             }
             FUNC => {
-                let name = self.read_byte().unwrap();
-                self.jumptable.push(name as usize);
+                let jp = self.read_byte().unwrap();
+                self.jumptable.push(jp as usize);
             }
             ALLOC => {
                 let mut args = self.get_args(&ALLOC_ARGS);
@@ -168,9 +180,8 @@ impl Engine {
             }
             FREE => {
                 let args = self.get_args(&FREE_ARGS);
-                let reg = args[0];
-                let addr = self.regs[reg];
-                self.free(addr);
+                let addr = args[0];
+                self.free(addr as u64);
             }
             JMP => {
                 let args = self.get_args(&JMP_ARGS);
