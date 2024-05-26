@@ -21,7 +21,6 @@ use reader::Reader;
 use std::str::from_utf8_unchecked;
 use std::time::Instant;
 use std::{env, string};
-use cbasm;
 
 pub fn read (path: &str) -> Vec<u8> {
     let mut reader = Reader::new(path);

@@ -106,11 +106,13 @@ impl Engine {
         for i in 0..bytes.bytes.len() {
             let byte = bytes.bytes[i].clone();
             match byte.tp {
-                Types::TypeFunc => self.jumptable.push(byte.unwrap() as usize),
+                Types::TypeFunc => {
+                    self.jumptable.push(i)
+                },
                 _ => (),
             }
         }
-        println!("{:?}", self.jumptable);
+        println!("Jumptable: {:?}", self.jumptable);
         //iterate through the bytes and pass them to a handler
         while self.ip < bytes.bytes.len() {
             let byte = bytes.bytes[self.ip].clone();

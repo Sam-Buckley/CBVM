@@ -4,4 +4,6 @@
     WRITE [string] b
     FLUSH
     FREE 1
+    JMP :end
     JMP :main
+:end

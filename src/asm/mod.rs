@@ -58,6 +58,9 @@ pub fn mkasm(stream: ByteStream) -> String {
             TypeI8 => {
                 asm.push_str(&format!("{:x} ", *(byte.data)));
             }
+            TypeJmp => {
+                asm.push_str(&format!("j{:x} ", *(byte.data)));
+            }
         }
     }
     asm
