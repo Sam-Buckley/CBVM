@@ -179,7 +179,7 @@ pub const MATH_OP_ARGS: [ArgType; 2] = [
 pub const JMP_ARGS: [ArgType; 1] = [
     Typed
 ];
-pub const RDACC_ARGS: [ArgType; 1] = [
+pub const REACC_ARGS: [ArgType; 1] = [
     Dest
 ];
 pub const WRACC_ARGS: [ArgType; 1] = [
@@ -189,21 +189,21 @@ pub const BITWISE_OP_ARGS: [ArgType; 2] = [
     Dest, Typed
 ];
 pub const COMPARISON_OP_ARGS: [ArgType; 2] = [
-    Dest, Typed
+    Typed, Typed
 ];
 
 pub const ALLOC_ARGS : [ArgType; 2] = [
     Dest, Typed
 ];
-pub const REALLOC_ARGS : [ArgType; 3] = [
-    Dest, Typed, Typed
+pub const REALLOC_ARGS : [ArgType; 2] = [
+    Dest, Typed
 ];
 pub const FREE_ARGS : [ArgType; 1] = [
     Typed
 ];
 
-pub const CONTROL_FLOW_OP_ARGS: [ArgType; 2] = [
-    Func, Typed //Func, condition
+pub const CONTROL_FLOW_OP_ARGS: [ArgType; 1] = [
+    Func //Func, condition
 ];
 
 pub const LOAD_OP_ARGS: [ArgType; 2] = [

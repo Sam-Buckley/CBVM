@@ -152,6 +152,16 @@ impl Engine {
             FLUSH => {
                 self.io.flush();
             }
+            INC => {
+                let args = self.get_args(&REG_OP_ARGS);
+                let reg = args[0];
+                self.regs[reg] += 1;
+            }
+            DEC => {
+                let args = self.get_args(&REG_OP_ARGS);
+                let reg = args[0];
+                self.regs[reg] -= 1;
+            }
             STORE => {
                 let args = self.get_args(&STORE_OP_ARGS);
                 let addr = args[0];
@@ -208,15 +218,12 @@ impl Engine {
             }
             WRACC => {
                 let args = self.get_args(&WRACC_ARGS);
-                let addr = args[0];
-                let value = self.accumulator;
-                self.move_reg(addr, value);
+                self.accumulator = args[0] as u64;
             }
             REACC => {
-                let args = self.get_args(&RDACC_ARGS);
-                let addr = args[0];
-                let value = self.regs[addr];
-                self.accumulator = value;
+                let args = self.get_args(&REACC_ARGS);
+                let reg = args[0];
+                self.move_reg(reg, self.accumulator);
             }
             PUSH => {
                 let args = self.get_args(&PUSH_OP_ARGS);
@@ -230,7 +237,115 @@ impl Engine {
                 let value = self.stack.pop() as u64;
                 self.move_reg(reg, value);
             }
-            _ => println!("Invalid opcode: {:?}", op),
+            MUL => {
+                let args = self.get_args(&MATH_OP_ARGS);
+                let left = args[0];
+                let right = args[1];
+                self.accumulator = left as u64 * right as u64;
+            }
+            DIV => {
+                let args = self.get_args(&MATH_OP_ARGS);
+                let left = args[0];
+                let right = args[1];
+                self.accumulator = left as u64 / right as u64;
+            }
+            MOD => {
+                let args = self.get_args(&MATH_OP_ARGS);
+                let left = args[0];
+                let right = args[1];
+                self.accumulator = left as u64 % right as u64;
+            }
+            REALLOC => {
+                let args = self.get_args(&REALLOC_ARGS);
+                let addr = args[0];
+                let size = args[1];
+                let new_addr = self.realloc(addr as u64, size);
+                self.move_reg(addr as usize, new_addr);
+            }
+            JZ => {
+                let args = self.get_args(&CONTROL_FLOW_OP_ARGS);
+                let func = args[0];
+                let condition = args[1];
+                if self.accumulator == 0 {
+                    self.ip = func;
+                }
+            }
+            JNZ => {
+                let args = self.get_args(&CONTROL_FLOW_OP_ARGS);
+                let func = args[0];
+                let condition = args[1];
+                if self.accumulator != 0 {
+                    self.ip = func;
+                }
+            }
+            DUP => {
+                //takes no arg, duplicates the top of the stack
+                let value = self.stack.peek();
+                self.stack.push(value);
+            }
+            GT => {
+                let args = self.get_args(&COMPARISON_OP_ARGS);
+                let left = args[0];
+                let right = args[1];
+                self.accumulator = if left > right { 1 } else { 0 };
+            }
+            LT => {
+                let args = self.get_args(&COMPARISON_OP_ARGS);
+                let left = args[0];
+                let right = args[1];
+                self.accumulator = if left < right { 1 } else { 0 };
+            }
+            EQ => {
+                let args = self.get_args(&COMPARISON_OP_ARGS);
+                let left = args[0];
+                let right = args[1];
+                self.accumulator = if left == right { 1 } else { 0 };
+            }
+            OR => {
+                let args = self.get_args(&MATH_OP_ARGS);
+                let left = args[0];
+                let right = args[1];
+                self.accumulator = left as u64 | right as u64;
+            }
+            AND => {
+                let args = self.get_args(&MATH_OP_ARGS);
+                let left = args[0];
+                let right = args[1];
+                self.accumulator = left as u64 & right as u64;
+            }
+            SWAP => {
+                //swap top 2 elements of the stack
+                let top = self.stack.pop();
+                let next = self.stack.pop();
+                self.stack.push(top);
+                self.stack.push(next);
+            }
+            XOR => {
+                let args = self.get_args(&MATH_OP_ARGS);
+                let left = args[0];
+                let right = args[1];
+                self.accumulator = left as u64 ^ right as u64;
+            }
+            NEQ => {
+                let args = self.get_args(&COMPARISON_OP_ARGS);
+                let left = args[0];
+                let right = args[1];
+                self.accumulator = if left != right { 1 } else { 0 };
+            }
+            NOT => {
+                let args = self.get_args(&REG_OP_ARGS);
+                let reg = args[0];
+                self.regs[reg] = !self.regs[reg];
+            }
+            READ => {
+                let args = self.get_args(&IO_IN_OP_ARGS);
+                let buf = args[0];
+                let len = args[1];
+                let data = self.io.read(len);
+                for i in 0..len {
+                    let res = self.heap.write(buf as usize + i, data[i]);
+                }
+            }
         };
     }
     fn get_args(&mut self, args: &[ArgType]) -> Vec<usize> {
@@ -295,6 +410,7 @@ impl Engine {
             TypeI64 => byte,
             NoType => byte,
             TypeFunc => self.jumptable[byte],
+            TypeJmp => self.jumptable[byte],
             _ => panic!("Invalid type: {:?}", tp),
         }
     }
