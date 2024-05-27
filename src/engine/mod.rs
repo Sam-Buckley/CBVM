@@ -168,7 +168,8 @@ impl Engine {
                 let len = args[1];
                 //read as many args as the length
                 for i in 0..len {
-                    let byte = self.read_byte().unwrap();
+                    let bt = self.read_byte();
+                    let byte = self.handle_typed(bt);
                     let res = self.heap.write(addr as usize + i, byte as u8);
                 }
             }
