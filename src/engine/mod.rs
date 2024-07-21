@@ -112,7 +112,6 @@ impl Engine {
                 _ => (),
             }
         }
-        println!("Jumptable: {:?}", self.jumptable);
         //iterate through the bytes and pass them to a handler
         while self.ip < bytes.bytes.len() {
             let byte = bytes.bytes[self.ip].clone();
@@ -153,9 +152,21 @@ impl Engine {
                 self.io.flush();
             }
             INC => {
-                let args = self.get_args(&REG_OP_ARGS);
-                let reg = args[0];
-                self.regs[reg] += 1;
+                //takes 2 args, addr and value, if type of addr is TypeReg, increment the value of the register
+                //if it's not, increment the value at the address in heap
+                //get first byte
+                let byte = self.read_byte();
+                let val = self.read_byte();
+                let val = self.handle_typed(val);
+                match byte.tp {
+                    Types::TypeReg => {
+                        self.regs[byte.unwrap() as usize] += val as u64;
+                    }
+                    _ => {
+                        let value = self.heap.read(byte.unwrap() as usize, 1).unwrap()[0];
+                        let _ = self.heap.write(byte.unwrap() as usize, value + 1);
+                    }
+                }
             }
             DEC => {
                 let args = self.get_args(&REG_OP_ARGS);
@@ -181,7 +192,8 @@ impl Engine {
                 self.move_reg(addr, data[0] as u64);
             }
             FUNC => {
-                let jp = self.read_byte().unwrap();
+                let args = self.get_args(&[Typed]);
+                let jp = args[0];
                 self.jumptable.push(jp as usize);
             }
             ALLOC => {
@@ -266,7 +278,6 @@ impl Engine {
             JZ => {
                 let args = self.get_args(&CONTROL_FLOW_OP_ARGS);
                 let func = args[0];
-                let condition = args[1];
                 if self.accumulator == 0 {
                     self.ip = func;
                 }
@@ -274,7 +285,6 @@ impl Engine {
             JNZ => {
                 let args = self.get_args(&CONTROL_FLOW_OP_ARGS);
                 let func = args[0];
-                let condition = args[1];
                 if self.accumulator != 0 {
                     self.ip = func;
                 }
@@ -412,7 +422,7 @@ impl Engine {
             NoType => byte,
             TypeFunc => self.jumptable[byte],
             TypeJmp => self.jumptable[byte],
-            _ => panic!("Invalid type: {:?}", tp),
+            _ => byte,
         }
     }
 }
